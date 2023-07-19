@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 
 const bookSchema = mongoose.Schema({
 	book: { type: Array , default : [{
+		id: { type: String, required: true },
 		_id: { type: String, required: true },
 		userId: { type: String, required: true },
 		title: { type: String, required: true },
