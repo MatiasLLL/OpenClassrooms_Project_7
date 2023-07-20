@@ -8,9 +8,9 @@ const multer = require("../middleware/multer-config");
 
 const bookControllers = require("../controllers/book");
 
-router.get("/", auth, bookControllers.getAllBooks);
+router.get("/", bookControllers.getAllBooks);
 router.post("/", auth, multer, bookControllers.createBook);
-router.get("/:id", auth, bookControllers.getOneBook);
+router.get("/:id", bookControllers.getOneBook);
 router.put("/:id", auth, multer, bookControllers.modifyBook);
 router.delete("/:id", auth, bookControllers.removeBook);
 

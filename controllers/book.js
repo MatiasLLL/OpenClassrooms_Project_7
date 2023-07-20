@@ -1,11 +1,11 @@
 /* eslint-disable no-undef */
+const { Console } = require("console");
 const Book = require("../models/Book");
 const fs = require("fs");
 
 exports.createBook = (req, res, next) => {
 	const bookObject = JSON.parse(req.body.book);
-	delete bookObject._id;
-	delete bookObject._userId;
+	delete bookObject.userId;
 	const book = new Book({
 		...bookObject,
 		userId: req.auth.userId,
@@ -45,7 +45,7 @@ exports.removeBook = (req, res, next) => {
 			} else {
 				const filename = book.imageUrl.split("/images/")[1];
 				fs.unlink(`images/${filename}`, () => {
-					Book.deleteOne({_id: req.params.id}, { ...bookObject, _id: req.params.id})
+					Book.deleteOne({_id: req.params.id})
 						.then(() => res.status(200).json({ message : "Modified!" }))
 						.catch(error => res.status(401).json({ error }));
 				});
