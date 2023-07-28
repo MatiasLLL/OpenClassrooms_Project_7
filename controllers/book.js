@@ -98,17 +98,13 @@ exports.rateBook = (req, res, next) => {
 };
 
 exports.getThreeBestBooks = (req, res, next) => {
-	let arrayBooks = [];
-	let threeBestBooks = [];
 	Book.find()
 		.then((books) => {
-			books.forEach(book => arrayBooks.push(book));
-			const sortedBooksRatings = arrayBooks.sort((a, b) => b.averageRating - a.averageRating);
-			threeBestBooks = sortedBooksRatings.slice(0, 3);
+			const sortedBooksRatings = [...books].sort((a, b) => b.averageRating - a.averageRating);
+			const threeBestBooks = sortedBooksRatings.slice(0, 3);
 			res.status(200).json(threeBestBooks);
 		})
-		.catch(error => res.status(400).json({ error }));
+		.catch(error => {
+			res.status(400).json({ error: error.message });
+		});
 };
-
-// console.log(sortedBooksRatings);
-// console.log(threeBestBooks);
