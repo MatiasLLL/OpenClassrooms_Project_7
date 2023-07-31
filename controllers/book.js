@@ -1,10 +1,9 @@
 /* eslint-disable no-undef */
-const { Console } = require("console");
 const Book = require("../models/Book");
 const fs = require("fs");
 const sharp = require("sharp");
 
-exports.createBook = async (req, res, next) => {
+exports.createBook = async (req, res) => {
 	const bookObject = JSON.parse(req.body.book);
 	delete bookObject.userId;
 	const book = new Book({
@@ -14,8 +13,8 @@ exports.createBook = async (req, res, next) => {
 	});
 	await sharp(req.file.path)
 		.resize(405, 538)
-		.png({ quality: 50 })
-		.jpeg({ quality: 50 })
+		.png({ quality: 70 })
+		.jpeg({ quality: 70 })
 		.toFile("images/sharped_" + req.file.filename);
 	
 	book.save()
@@ -23,7 +22,7 @@ exports.createBook = async (req, res, next) => {
 		.catch(error => res.status(400).json({ error }));
 };
 
-exports.modifyBook = async (req, res, next) => {
+exports.modifyBook = async (req, res) => {
 	const bookObject = req.file ? {
 		...JSON.parse(req.body.book),
 		userId: req.auth.userId,
@@ -32,8 +31,8 @@ exports.modifyBook = async (req, res, next) => {
 	if (req.file) {
 		await sharp(req.file.path)
 			.resize(405, 538)
-			.png({ quality: 50 })
-			.jpeg({ quality: 50 })
+			.png({ quality: 70 })
+			.jpeg({ quality: 70 })
 			.toFile("images/sharped_" + req.file.filename);
 	}
 
@@ -51,7 +50,7 @@ exports.modifyBook = async (req, res, next) => {
 		.catch(error => res.status(400).json({ error }));
 };
 
-exports.removeBook = (req, res, next) => {
+exports.removeBook = (req, res) => {
 	Book.findOne({_id: req.params.id})
 		.then(book => {
 			if (book.userId != req.auth.userId) {
@@ -68,19 +67,19 @@ exports.removeBook = (req, res, next) => {
 		.catch(error => res.status(400).json({ error }));
 };
 
-exports.getOneBook = (req, res, next) => {
+exports.getOneBook = (req, res) => {
 	Book.findOne({ _id: req.params.id })
 		.then(book => res.status(200).json(book))
 		.catch(error => res.status(404).json({ error }));
 };
 
-exports.getAllBooks = (req, res, next) => {
+exports.getAllBooks = (req, res) => {
 	Book.find()
 		.then(books => res.status(200).json(books))
 		.catch(error => res.status(400).json({ error }));
 };
 
-exports.rateBook = (req, res, next) => {
+exports.rateBook = (req, res) => {
 	let averageRating = req.body.rating;
 	Book.findOne({ _id: req.params.id })
 		.then(book => {
@@ -89,6 +88,7 @@ exports.rateBook = (req, res, next) => {
 			} else {
 				book.ratings.push({ userId: req.auth.userId, grade: req.body.rating });
 				averageRating = book.ratings.reduce((total, rating) => total + rating.grade, 0) / book.ratings.length;
+				averageRating = averageRating.toFixed(1);
 				book.averageRating = averageRating;
 				return book.save();
 			}
@@ -97,7 +97,7 @@ exports.rateBook = (req, res, next) => {
 		.catch(error => res.status(400).json({ error }));
 };
 
-exports.getThreeBestBooks = (req, res, next) => {
+exports.getThreeBestBooks = (req, res) => {
 	Book.find()
 		.then((books) => {
 			const sortedBooksRatings = [...books].sort((a, b) => b.averageRating - a.averageRating);
