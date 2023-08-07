@@ -12,14 +12,14 @@ exports.createBook = async (req, res) => {
 		imageUrl: `${req.protocol}://${req.get("host")}/images/sharped_${req.file.filename}`
 	});
 	await sharp(req.file.path)
-		.resize(405, 538)
+		.resize(405, 568)
 		.png({ quality: 70 })
 		.jpeg({ quality: 70 })
 		.toFile("images/sharped_" + req.file.filename);
 	
 	book.save()
 		.then(() => res.status(201).json({ message: "Registered!" }))
-		.catch(error => res.status(400).json({ error }));
+		.catch(error => res.status(500).json({ error }));
 };
 
 exports.modifyBook = async (req, res) => {
@@ -30,7 +30,7 @@ exports.modifyBook = async (req, res) => {
 	} : { ...req.body };
 	if (req.file) {
 		await sharp(req.file.path)
-			.resize(405, 538)
+			.resize(405, 568)
 			.png({ quality: 70 })
 			.jpeg({ quality: 70 })
 			.toFile("images/sharped_" + req.file.filename);
@@ -40,31 +40,31 @@ exports.modifyBook = async (req, res) => {
 	Book.findOne({_id: req.params.id})
 		.then(book => {
 			if (book.userId != req.auth.userId) {
-				res.status(401).json({ message : "403: unauthorized request" });
+				res.status(403).json({ message : "403: unauthorized request" });
 			} else {
 				Book.updateOne({_id: req.params.id}, { ...bookObject, _id: req.params.id})
 					.then(() => res.status(200).json({ message : "Modified!" }))
-					.catch(error => res.status(401).json({ error }));
+					.catch(error => res.status(500).json({ error }));
 			}
 		})
-		.catch(error => res.status(400).json({ error }));
+		.catch(error => res.status(500).json({ error }));
 };
 
 exports.removeBook = (req, res) => {
 	Book.findOne({_id: req.params.id})
 		.then(book => {
 			if (book.userId != req.auth.userId) {
-				res.status(401).json({ message : "403: unauthorized request" });
+				res.status(403).json({ message : "403: unauthorized request" });
 			} else {
 				const filename = book.imageUrl.split("/images/")[1];
 				fs.unlink(`images/${filename}`, () => {
 					Book.deleteOne({_id: req.params.id})
 						.then(() => res.status(200).json({ message : "Modified!" }))
-						.catch(error => res.status(401).json({ error }));
+						.catch(error => res.status(500).json({ error }));
 				});
 			}
 		})
-		.catch(error => res.status(400).json({ error }));
+		.catch(error => res.status(500).json({ error }));
 };
 
 exports.getOneBook = (req, res) => {
@@ -76,7 +76,7 @@ exports.getOneBook = (req, res) => {
 exports.getAllBooks = (req, res) => {
 	Book.find()
 		.then(books => res.status(200).json(books))
-		.catch(error => res.status(400).json({ error }));
+		.catch(error => res.status(404).json({ error }));
 };
 
 exports.rateBook = (req, res) => {
@@ -84,7 +84,7 @@ exports.rateBook = (req, res) => {
 	Book.findOne({ _id: req.params.id })
 		.then(book => {
 			if (book.ratings.find(rating => rating.userId === req.auth.userId)) {
-				return res.status(400).json({ error: "User has already rated this book" });
+				return res.status(405).json({ error: "User has already rated this book" });
 			} else {
 				book.ratings.push({ userId: req.auth.userId, grade: req.body.rating });
 				averageRating = book.ratings.reduce((total, rating) => total + rating.grade, 0) / book.ratings.length;
@@ -94,7 +94,7 @@ exports.rateBook = (req, res) => {
 			}
 		})
 		.then(book => res.status(200).json(book))
-		.catch(error => res.status(400).json({ error }));
+		.catch(error => res.status(500).json({ error }));
 };
 
 exports.getThreeBestBooks = (req, res) => {
@@ -105,6 +105,6 @@ exports.getThreeBestBooks = (req, res) => {
 			res.status(200).json(threeBestBooks);
 		})
 		.catch(error => {
-			res.status(400).json({ error: error.message });
+			res.status(500).json({ error: error.message });
 		});
 };

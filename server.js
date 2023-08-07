@@ -1,48 +1,34 @@
+/* eslint-disable no-mixed-spaces-and-tabs */
 /* eslint-disable no-undef */
-const http = require("http");
-const app = require("./app");
-
-const normalizePort = val => {
-	const port = parseInt(val, 10);
-  
-	if (isNaN(port)) {
-		return val;
-	}
-	if (port >= 0) {
-		return port;
-	}
-	return false;
-};
-const port = normalizePort(process.env.PORT || "4000");
-app.set("port", port);
-  
-const errorHandler = error => {
-	if (error.syscall !== "listen") {
-		throw error;
-	}
-	const address = server.address();
-	const bind = typeof address === "string" ? "pipe " + address : "port: " + port;
-	switch (error.code) {
-	case "EACCES":
-		console.error(bind + " requires elevated privileges.");
-		process.exit(1);
-		break;
-	case "EADDRINUSE":
-		console.error(bind + " is already in use.");
-		process.exit(1);
-		break;
-	default:
-		throw error;
-	}
-};
-
-const server = http.createServer(app);
-
-server.on("error", errorHandler);
-server.on("listening", () => {
-	const address = server.address();
-	const bind = typeof address === "string" ? "pipe " + address : "port " + port;
-	console.log("Listening on " + bind);
+const express = require("express");
+const mongoose = require("mongoose");
+const app = express();
+const PORT = "4000";
+require("dotenv").config();
+const bookRoutes = require("./routes/book");
+const userRoutes = require("./routes/user");
+const path = require("path");
+ 
+app.listen(PORT, () => {
+	console.log("Server listening on Port", PORT);
 });
 
-server.listen(port);
+mongoose.connect(`mongodb+srv://${process.env.CONNEXION}/?retryWrites=true&w=majority`,
+	{ useNewUrlParser: true, useUnifiedTopology: true }) 
+	.then(() => console.log("Connection to MongoDB successful!"))
+	.catch((error) => console.log(error, "Connection to MongoDB failed!"));
+
+app.use((req, res, next) => {
+	res.setHeader("Access-Control-Allow-Origin", "*");
+	res.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content, Accept, Content-Type, Authorization");
+	res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, OPTIONS");
+	next();
+});
+
+app.use(express.json());
+
+app.use("/api/books", bookRoutes);
+app.use("/api/auth", userRoutes);
+app.use("/images", express.static(path.join(__dirname, "images")));
+
+module.exports = app;
